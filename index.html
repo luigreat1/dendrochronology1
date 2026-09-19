@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тренинг: возраст по годовым кольцам</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: linear-gradient(145deg, #ffffff 0%, #ffffff 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Arial Narrow', 'Liberation Sans Narrow', 'Helvetica Narrow', Arial, sans-serif;
+            padding: 20px;
+        }
+
+        .card {
+            max-width: 1300px;
+            width: 100%;
+            background: #f7efe2;
+            background-image: radial-gradient(circle at 30% 40%, rgba(200, 170, 120, 0.15) 0%, transparent 50%);
+            border-radius: 20px 20px 30px 30px;
+            padding: 30px 30px 40px;
+            position: relative;
+            transition: all 0.2s;
+        }
+
+        .card::before {
+            content: "";
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            bottom: 10px;
+            border-radius: 20px;
+            pointer-events: none;
+            background: repeating-linear-gradient(45deg, rgba(120, 70, 30, 0.03) 0px, rgba(120, 70, 30, 0.03) 2px, transparent 2px, transparent 6px);
+            z-index: 0;
+        }
+
+        h1 {
+            font-size: 2.6rem;
+            color: #3b2a18;
+            text-align: center;
+            font-weight: 400;
+            letter-spacing: 2px;
+            margin-bottom: 5px;
+            position: relative;
+            z-index: 1;
+            word-break: break-word;
+            font-family: 'Arial Narrow', 'Liberation Sans Narrow', 'Helvetica Narrow', Arial, sans-serif;
+        }
+
+        .subhead {
+            text-align: center;
+            color: #6b4c2c;
+            font-style: italic;
+            font-size: 1.25rem;
+            margin-bottom: 30px;
+            border-bottom: 1px dashed #b89b6e;
+            padding-bottom: 15px;
+            position: relative;
+            z-index: 1;
+            font-family: 'Arial Narrow', 'Liberation Sans Narrow', 'Helvetica Narrow', Arial, sans-serif;
+        }
+
+        .violin-icon {
+            display: inline-block;
+            font-size: 1.7rem;
+            margin-right: 6px;
+        }
+
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .trainer-area {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            justify-content: center;
+            align-items: stretch;
+            position: relative;
+            z-index: 2;
+        }
+
+        .rings-panel {
+            flex: 2 1 400px;
+            background: #e6d8c0;
+            border-radius: 20px 20px 30px 30px;
+            padding: 25px 20px 20px;
+            border: 2px solid #b28b5c;
+            transition: 0.3s;
+        }
+
+        .rings-container {
+            background: #dac09a;
+            border-radius: 50%;
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            max-width: 420px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border: 4px solid #593c1f;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #ringsCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+            border-radius: 50%;
+            background: #f0e1c9;
+        }
+
+        .question-panel {
+            flex: 1.2 1 280px;
+            background: #f0e6d8;
+            border-radius: 20px;
+            padding: 25px 20px;
+            border: 2px solid #c7aa7a;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            transition: 0.2s;
+        }
+
+        .question-text {
+            font-size: 1.5rem;
+            color: #31200e;
+            text-align: center;
+            margin-bottom: 20px;
+            font-weight: 600;
+            background: #dac09a;
+            padding: 12px;
+            border-radius: 20px;
+            letter-spacing: 0.5px;
+            border: 1px solid #aa8b5e;
+            font-family: 'Arial Narrow', 'Liberation Sans Narrow', 'Helvetica Narrow', Arial, sans-serif;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+
+        .option-btn {
+            padding: 14px 10px;
+            font-size: 1.3rem;
+            font-family: 'Arial Narrow', 'Liberation Sans Narrow', 'Helvetica Narrow', Arial, sans-serif;
+            background: #cbb18b;
+            border: none;
+            border-radius: 20px;
+            color: #221a0e;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.08s ease;
+            border: 1px solid #dac09a;
+            letter-spacing: 1px;
+        }
+
+        .option-btn:hover {
+            background: #dac29c;
+            transform: translateY(-2px);
+        }
+
+        .option-btn:active {
+            transform: translateY(4px);
+        }
+
+        .option-btn.selected-true {
+            background: #5c8f4c;
+            color: white;
+            border-color: #a1c78e;
+        }
+
+        .option-btn.selected-false {
+            background: #a55e4a;
+            color: white;
+            border-color: #ce9583;
+        }
+
+        .option-btn:disabled {
+            opacity: 0.8;
+            cursor: not-allowed;
+            transform: translateY(2px);
+        }
+
+        .feedback {
+            min-height: 70px;
+            padding: 12px;
+            background: #e9dccd;
+            border-radius: 20px;
+            text-align: center;
+            font-size: 1.3rem;
+            color: #2d1d0c;
+            margin-bottom: 15px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.2s;
+            word-break: break-word;
+            font-family: 'Arial Narrow', 'Liberation Sans Narrow', 'Helvetica Narrow', Arial, sans-serif;
+        }
+
+        .next-btn {
+            background: #3b2a18;
+            border: none;
+            padding: 14px 10px;
+            border-radius: 20px;
+            font-size: 1.4rem;
+            font-weight: bold;
+            font-family: 'Arial Narrow', 'Liberation Sans Narrow', 'Helvetica Narrow', Arial, sans-serif;
+            color: #efdfc7;
+            cursor: pointer;
+            transition: all 0.08s;
+            letter-spacing: 2px;
+            width: 100%;
+            border: 1px solid #b89b6e;
+        }
+
+        .next-btn:hover {
+            background: #543d24;
+            transform: translateY(-2px);
+        }
+
+        .next-btn:active {
+            transform: translateY(4px);
+        }
+
+        .next-btn:disabled {
+            opacity: 0.5;
+            transform: translateY(2px);
+            pointer-events: none;
+        }
+
+        .score {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 1.3rem;
+            color: #3b2a18;
+            font-weight: 600;
+            background: #dac09a;
+            padding: 8px 15px;
+            border-radius: 20px;
+            display: inline-block;
+            align-self: center;
+            border: 1px solid #a58764;
+            font-family: 'Arial Narrow', 'Liberation Sans Narrow', 'Helvetica Narrow', Arial, sans-serif;
+        }
+
+        .result-message {
+            font-size: 1.3rem;
+            color: #1e3d1a;
+            text-align: center;
+            margin-top: 10px;
+            font-weight: 600;
+            background: #d4e0c0;
+            padding: 8px;
+            border-radius: 20px;
+            border: 2px solid #577a45;
+            font-family: 'Arial Narrow', 'Liberation Sans Narrow', 'Helvetica Narrow', Arial, sans-serif;
+        }
+
+        /* Персонаж + инструкция справа */
+        .character-area {
+            width: 100%;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            gap: 30px;
+            background: #efe3d0;
+            border-radius: 20px;
+            padding: 20px 25px;
+            border: 2px solid #b89b6e;
+            transition: 0.3s;
+        }
+
+        .character-area img {
+            width: auto;
+            max-width: 430px;
+            height: auto;
+            border-radius: 20px;
+            display: block;
+            transition: transform 0.3s ease;
+            flex-shrink: 0;
+        }
+
+        .character-area img:hover {
+            transform: scale(1.03) rotate(1deg);
+        }
+
+        /* Блок с инструкцией справа от персонажа */
+        .instruction-box {
+            flex: 1;
+            min-width: 260px;
+            max-width: 640px;
+            background: #f7efe2;
+            border: 2px solid #b89b6e;
+            border-radius: 20px;
+            padding: 18px 22px;
+            color: #2d1d0c;
+            font-family: 'Arial Narrow', 'Liberation Sans Narrow', 'Helvetica Narrow', Arial, sans-serif;
+        }
+
+        .instruction-box h3 {
+            font-size: 1.4rem;
+            color: #3b2a18;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+            font-weight: 700;
+            text-align: center;
+        }
+
+        .instruction-box ul {
+            list-style: none;
+            padding-left: 0;
+            margin: 0;
+        }
+
+        .instruction-box li {
+            font-size: 1.15rem;
+            line-height: 1.4;
+            margin-bottom: 8px;
+            padding-left: 26px;
+            position: relative;
+        }
+
+        .instruction-box li::before {
+            content: "🪵";
+            position: absolute;
+            left: 0;
+            top: 0;
+            font-size: 1rem;
+        }
+
+        .instruction-box .tip {
+            margin-top: 10px;
+            padding: 8px 12px;
+            background: #dac09a;
+            border-radius: 14px;
+            border: 1px solid #a58764;
+            font-style: italic;
+            font-size: 1.05rem;
+            text-align: center;
+        }
+
+        @media (max-width: 900px) {
+            .character-area {
+                flex-direction: column;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            .character-area img {
+                max-width: 240px;
+            }
+            .instruction-box {
+                max-width: 100%;
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 700px) {
+            .card {
+                padding: 20px 15px;
+            }
+            h1 {
+                font-size: 2rem;
+            }
+            .rings-panel {
+                padding: 15px;
+            }
+            .question-text {
+                font-size: 1.25rem;
+            }
+            .option-btn {
+                font-size: 1.1rem;
+                padding: 12px;
+            }
+            .character-area img {
+                max-width: 200px;
+            }
+            .instruction-box h3 {
+                font-size: 1.25rem;
+            }
+            .instruction-box li {
+                font-size: 1.05rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>
+            <span class="violin-icon">🪵</span> 
+           Секреты дендрохронологии
+            <span class="violin-icon">🪵</span>
+        </h1>
+        <div class="subhead">Определи возраст дерева по годичным кольцам</div>
+
+        <div class="main-content">
+            <!-- Сначала тренажёр -->
+            <div class="trainer-area">
+                <div class="rings-panel">
+                    <div class="rings-container" id="ringsContainer">
+                        <canvas id="ringsCanvas" width="600" height="600"></canvas>
+                    </div>
+                </div>
+
+                <div class="question-panel">
+                    <div class="question-text" id="questionText">Сколько лет этому дереву?</div>
+                    <div class="options" id="optionsContainer"></div>
+                    <div class="feedback" id="feedbackMessage">Выбери вариант ответа</div>
+                    <button class="next-btn" id="nextBtn" disabled>Следующий образец →</button>
+                    <div class="score" id="scoreDisplay">Счёт: 0 / 0</div>
+                    <div id="resultMessage" class="result-message" style="display: none;"></div>
+                </div>
+            </div>
+
+            <!-- Персонаж + краткая инструкция справа -->
+            <div class="character-area">
+                <img src="lui.png" alt="Персонаж-помощник" id="characterImage">
+
+                <div class="instruction-box">
+                    <h3>Как считать годовые кольца</h3>
+                    <ul>
+                        <li>Найди центр спила — точку, откуда расходятся круги.</li>
+                        <li>Считай каждое тёмное кольцо за один год жизни дерева.</li>
+                        <li>Двигайся от центра к краю, не пропуская узкие кольца.</li>
+                        <li>Последнее (самое внешнее) кольцо — текущий год роста.</li>
+                    </ul>
+                    <div class="tip">Совет: узкие кольца — засушливые годы, широкие — благоприятные.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        (function() {
+            const samples = [
+                { age: 7, rings: 7, options: [4, 7, 10, 12], correct: 7, hint: "Семь отчётливых тёмных колец." },
+                { age: 12, rings: 12, options: [8, 10, 12, 15], correct: 12, hint: "Двенадцать колец, последнее тонкое." },
+                { age: 5, rings: 5, options: [3, 5, 8, 11], correct: 5, hint: "Пять широких колец, дерево росло быстро." },
+                { age: 15, rings: 15, options: [12, 14, 15, 18], correct: 15, hint: "Пятнадцать колец, есть узкие и широкие." },
+                { age: 9, rings: 9, options: [6, 9, 12, 14], correct: 9, hint: "Девять колец, хорошо различимы." }
+            ];
+
+            let currentSampleIndex = 0;
+            let score = 0;
+            let answeredCount = 0;
+            let optionsLocked = false;
+            let hasAnsweredCurrent = false;
+
+            const canvas = document.getElementById('ringsCanvas');
+            const ctx = canvas.getContext('2d');
+            const questionText = document.getElementById('questionText');
+            const optionsContainer = document.getElementById('optionsContainer');
+            const feedbackMessage = document.getElementById('feedbackMessage');
+            const nextBtn = document.getElementById('nextBtn');
+            const scoreDisplay = document.getElementById('scoreDisplay');
+            const resultMessage = document.getElementById('resultMessage');
+
+            function drawRings(ringCount) {
+                const w = canvas.width;
+                const h = canvas.height;
+                ctx.clearRect(0, 0, w, h);
+
+                const gradient = ctx.createRadialGradient(w/2, h/2, 20, w/2, h/2, w/1.8);
+                gradient.addColorStop(0, '#e7d6b8');
+                gradient.addColorStop(0.7, '#c9ad82');
+                gradient.addColorStop(1, '#a88658');
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(w/2, h/2, w/2 - 5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = '#5e3e1e';
+                ctx.lineWidth = 8;
+                ctx.stroke();
+
+                const maxRadius = w/2 - 25;
+                for (let i = 1; i <= ringCount; i++) {
+                    const baseRadius = (i / ringCount) * maxRadius;
+                    const variation = Math.sin(i * 2.5) * 4 + (i % 3) * 2; 
+                    const radius = Math.min(baseRadius + variation, maxRadius);
+
+                    const isDark = i % 2 === 0;
+                    ctx.beginPath();
+                    ctx.arc(w/2, h/2, radius, 0, Math.PI * 2);
+                    
+                    if (isDark) {
+                        ctx.strokeStyle = '#5a3e1f';
+                        ctx.lineWidth = 4 + (i % 3);
+                    } else {
+                        ctx.strokeStyle = '#b39264';
+                        ctx.lineWidth = 2 + (i % 2);
+                    }
+                    ctx.stroke();
+
+                    ctx.beginPath();
+                    ctx.arc(w/2, h/2, radius, 0, Math.PI * 2);
+                    ctx.strokeStyle = '#3d2a12';
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+                }
+
+                ctx.beginPath();
+                ctx.arc(w/2, h/2, 8, 0, Math.PI * 2);
+                ctx.fillStyle = '#4a2e12';
+                ctx.fill();
+                ctx.strokeStyle = '#1e1307';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                ctx.save();
+                ctx.globalAlpha = 0.15;
+                ctx.strokeStyle = '#2b1b0b';
+                ctx.lineWidth = 2;
+                for (let t = 0; t < 8; t++) {
+                    const angle = (t / 8) * Math.PI * 2 + 0.3;
+                    ctx.beginPath();
+                    ctx.moveTo(w/2, h/2);
+                    ctx.lineTo(w/2 + Math.cos(angle) * (w/2 - 30), h/2 + Math.sin(angle) * (w/2 - 30));
+                    ctx.stroke();
+                }
+                ctx.restore();
+            }
+
+            function loadSample(index) {
+                const sample = samples[index];
+                drawRings(sample.rings);
+                questionText.textContent = `Сколько лет этому дереву? ${index+1}/${samples.length}`;
+
+                optionsContainer.innerHTML = '';
+                const shuffledOptions = [...sample.options].sort(() => Math.random() - 0.5);
+                
+                shuffledOptions.forEach(optValue => {
+                    const btn = document.createElement('button');
+                    btn.classList.add('option-btn');
+                    btn.textContent = optValue + ' лет';
+                    btn.dataset.value = optValue;
+                    btn.addEventListener('click', () => handleOptionClick(btn, optValue, sample.correct));
+                    optionsContainer.appendChild(btn);
+                });
+
+                optionsLocked = false;
+                hasAnsweredCurrent = false;
+                feedbackMessage.textContent = 'Выбери вариант ответа';
+                feedbackMessage.style.borderLeftColor = '#b28b5c';
+                feedbackMessage.style.background = '#e9dccd';
+                document.querySelectorAll('.option-btn').forEach(btn => {
+                    btn.disabled = false;
+                    btn.classList.remove('selected-true', 'selected-false');
+                });
+                nextBtn.disabled = true;
+                resultMessage.style.display = 'none';
+                updateScore();
+            }
+
+            function handleOptionClick(btn, selectedValue, correctValue) {
+                if (optionsLocked || hasAnsweredCurrent) return;
+
+                optionsLocked = true;
+                hasAnsweredCurrent = true;
+                const allButtons = document.querySelectorAll('.option-btn');
+                allButtons.forEach(b => b.disabled = true);
+
+                const isCorrect = (selectedValue === correctValue);
+                if (isCorrect) {
+                    score++;
+                    btn.classList.add('selected-true');
+                    feedbackMessage.textContent = `✅ Верно! ${correctValue} лет. ${samples[currentSampleIndex].hint || ''}`;
+                    feedbackMessage.style.borderLeftColor = '#5c8f4c';
+                    feedbackMessage.style.background = '#d4e0c0';
+                } else {
+                    btn.classList.add('selected-false');
+                    allButtons.forEach(b => {
+                        if (parseInt(b.dataset.value) === correctValue) {
+                            b.classList.add('selected-true');
+                        }
+                    });
+                    feedbackMessage.textContent = `❌ Неправильно. Правильный ответ: ${correctValue} лет. ${samples[currentSampleIndex].hint || ''}`;
+                    feedbackMessage.style.borderLeftColor = '#a55e4a';
+                    feedbackMessage.style.background = '#f0d6cc';
+                }
+
+                answeredCount++;
+                updateScore();
+                nextBtn.disabled = false;
+            }
+
+            function updateScore() {
+                scoreDisplay.textContent = `Счёт: ${score} / ${answeredCount}`;
+            }
+
+            function goToNextSample() {
+                if (currentSampleIndex < samples.length - 1) {
+                    currentSampleIndex++;
+                    loadSample(currentSampleIndex);
+                } else {
+                    questionText.textContent = 'Тренинг завершён!';
+                    optionsContainer.innerHTML = '';
+                    feedbackMessage.textContent = `Вы ответили на ${answeredCount} вопросов. Правильных: ${score}`;
+                    feedbackMessage.style.borderLeftColor = '#3b2a18';
+                    feedbackMessage.style.background = '#dac09a';
+                    nextBtn.disabled = true;
+                    resultMessage.style.display = 'block';
+                    const percent = answeredCount > 0 ? Math.round((score / answeredCount) * 100) : 0;
+                    resultMessage.textContent = `🏆 Ваш результат: ${score} из ${answeredCount} (${percent}%)`;
+                    if (percent === 100) {
+                        resultMessage.textContent += ' — Идеально! Вы мастер дендрохронологии!';
+                    } else if (percent >= 70) {
+                        resultMessage.textContent += ' — Отличный результат!';
+                    } else {
+                        resultMessage.textContent += ' — Попробуйте ещё раз, чтобы улучшить.';
+                    }
+                }
+            }
+
+            function init() {
+                currentSampleIndex = 0;
+                score = 0;
+                answeredCount = 0;
+                loadSample(0);
+
+                nextBtn.addEventListener('click', goToNextSample);
+
+                const ringsContainer = document.getElementById('ringsContainer');
+                ringsContainer.addEventListener('click', () => {
+                    ringsContainer.style.transform = 'scale(1.01)';
+                    setTimeout(() => ringsContainer.style.transform = 'scale(1)', 100);
+                });
+            }
+
+            window.addEventListener('load', init);
+        })();
+    </script>
+</body>
+</html>
